@@ -1,6 +1,6 @@
 from Cryptodome.Random import get_random_bytes
 
-AES_KEY = get_random_bytes(16)
+AES_KEY = "kamtramaukapencu".encode()
 IV = "satramainmainkax".encode()
 BUFFER_SIZE_FILE = 1024
 SEPARATOR = "<SEPARATOR>"

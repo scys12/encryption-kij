@@ -63,7 +63,6 @@ def _encrypt(text, key):
 
     shift_matrix(matrix)
     add_round_key(matrix, expanded_key[-1])
-    print(convert_to_bytes(matrix))
     return convert_to_bytes(matrix)
 
 def encrypt(filename):
@@ -78,12 +77,13 @@ def encrypt(filename):
     padding_len = 16-len(data_to_pad)%16
     padding = bytes([padding_len])*padding_len
     total_text_byte = data_to_pad + padding
-    encrypt_data = _encrypt(total_text_byte, AES_KEY)
     file = open("{}.b".format(filename), "wb")
-    file.write(bytes(encrypt_data))
+    for i in range (0, len(total_text_byte), 16):
+        encrypt_data = _encrypt(total_text_byte[i: i+16], AES_KEY)
+        file.write(bytes(encrypt_data))
     file.close()
 
-def inv_shift_rows(matrix):
+def inverse_shift_matrix(matrix):
     matrix[0][1], matrix[1][1], matrix[2][1], matrix[3][1] = matrix[3][1], matrix[0][1], matrix[1][1], matrix[2][1]
     matrix[0][2], matrix[1][2], matrix[2][2], matrix[3][2] = matrix[2][2], matrix[3][2], matrix[0][2], matrix[1][2]
     matrix[0][3], matrix[1][3], matrix[2][3], matrix[3][3] = matrix[1][3], matrix[2][3], matrix[3][3], matrix[0][3]
@@ -91,11 +91,9 @@ def inv_shift_rows(matrix):
 def _decrypt(text, key):
     expanded_keys = expand_key(key)
     assert len(text) % 16 == 0
-
     matrix = convert_to_matrix(text)
-
     add_round_key(matrix, expanded_keys[-1])
-    inv_shift_rows(matrix)
+    inverse_shift_matrix(matrix)
     for i in range(4):
         for j in range(4):
             matrix[i][j] = INV_BOX[matrix[i][j]]
@@ -104,12 +102,12 @@ def _decrypt(text, key):
     for i in range(9, 0, -1):
         add_round_key(matrix, expanded_keys[i])
         for j in range(4):
-            u = xtime(xtime(matrix[i][0] ^ matrix[i][2]))
-            v = xtime(xtime(matrix[i][1] ^ matrix[i][3]))
-            matrix[i][0] ^= u
-            matrix[i][1] ^= v
-            matrix[i][2] ^= u
-            matrix[i][3] ^= v
+            init = xtime(xtime(matrix[j][0] ^ matrix[j][2]))
+            end = xtime(xtime(matrix[j][1] ^ matrix[j][3]))
+            matrix[j][0] ^= init
+            matrix[j][1] ^= end
+            matrix[j][2] ^= init
+            matrix[j][3] ^= end
         for j in range(4):
             xor_matrix = matrix[j][0] ^ matrix[j][1] ^ matrix[j][2] ^ matrix[j][3]
             temp = matrix[j][0]
@@ -117,7 +115,7 @@ def _decrypt(text, key):
             matrix[j][1] ^= xor_matrix ^ xtime(matrix[j][1] ^ matrix[j][2])
             matrix[j][2] ^= xor_matrix ^ xtime(matrix[j][2] ^ matrix[j][3])
             matrix[j][3] ^= xor_matrix ^ xtime(matrix[j][3] ^ temp)
-        inv_shift_rows(matrix)
+        inverse_shift_matrix(matrix)
         for j in range(4):
             for k in range(4):
                 matrix[j][k] = INV_BOX[matrix[j][k]]
@@ -132,12 +130,14 @@ def decrypt (filename):
         file.close()
     except Exception as e:
         raise Exception('Error decrypting data')
-    padded_data = bytes(_decrypt(ct_bytes, AES_KEY))
-    pdata_len = len(ct_bytes)
+    padded_data = []
+    for i in range (0, len(ct_bytes), 16):
+        decrypt_data = _decrypt(ct_bytes[i: i+16], AES_KEY)
+        padded_data.extend(decrypt_data)
     padding_len = padded_data[-1]
     total_text_byte = padded_data[:-padding_len]
     file = open(filename[:-2], "wb")
-    file.write(total_text_byte)
+    file.write(bytes(total_text_byte))
     file.close()
     os.remove(os.path.abspath(filename))
 

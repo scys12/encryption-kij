@@ -41,7 +41,6 @@ class AESLib:
             file.close()
         except Exception as e:
             raise Exception('Error decrypting data')
-
         cipher = AES.new(AES_KEY, AES.MODE_CBC, IV)
         text = unpad(cipher.decrypt(ct_bytes), AES.block_size)
         file = open(filename[:-2], "wb")

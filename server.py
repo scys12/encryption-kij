@@ -3,6 +3,7 @@ import selectors
 import sys
 import threading
 import os
+import custom_aes
 from constants import IP_ADDRESS, PORT, SEPARATOR, BUFFER_SIZE_FILE
 from util import Util, AESLib
 
@@ -18,9 +19,9 @@ def clientthread(conn, addr):
     try:
       message = conn.recv(BUFFER_SIZE_FILE).decode()
       if message:
-        filename, filesize = message.split(SEPARATOR)
+        filename, method, filesize = message.split(SEPARATOR)
         filename = f'received/{filename}'
-        print(filename)
+        print(filename, method, filesize)
         filesize = int(filesize)
         os.makedirs(os.path.dirname(filename), exist_ok=True)
         with open(filename, "wb") as file:
@@ -31,7 +32,10 @@ def clientthread(conn, addr):
                 file.write(message)
                 filesize -= len(message)
             file.close()
-        Util.benchmark_time(lambda: AESLib.decrypt(filename))
+        if method == "library":
+          Util.benchmark_time(lambda: AESLib.decrypt(filename))
+        elif method == "scratch":
+          Util.benchmark_time(lambda: custom_aes.decrypt(filename))
       else:
         remove(conn)
     except:

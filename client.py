@@ -13,7 +13,7 @@ server.connect((IP_ADDRESS, PORT))
 
 def send_file(method, filename):
     with open(filename, "rb") as file:
-        server.send(f"{filename}{SEPARATOR}{os.path.getsize(os.path.abspath(filename))}".encode())
+        server.send(f"{filename}{SEPARATOR}{method}{SEPARATOR}{os.path.getsize(os.path.abspath(filename))}".encode())
         while True:
             bytes_read = file.read(BUFFER_SIZE_FILE)
             if not bytes_read:
