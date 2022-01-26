@@ -29,7 +29,7 @@ def parse_and_process_message(message):
                 Util.benchmark_time(lambda: AESLib.encrypt(filename))
                 send_file(method, f'{filename}.b')
             elif method == "scratch":
-                Util.benchmark_time(lambda: custom_aes.encrypt(filename))
+                Util.benchmark_time(lambda: custom_aes.encrypt(filename, "cfb"))
                 send_file(method, f'{filename}.b')
     except Exception as e:
         print(e)

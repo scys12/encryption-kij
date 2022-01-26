@@ -35,7 +35,7 @@ def clientthread(conn, addr):
         if method == "library":
           Util.benchmark_time(lambda: AESLib.decrypt(filename))
         elif method == "scratch":
-          Util.benchmark_time(lambda: custom_aes.decrypt(filename))
+          Util.benchmark_time(lambda: custom_aes.decrypt(filename, "cfb"))
       else:
         remove(conn)
     except:
